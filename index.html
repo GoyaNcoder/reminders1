@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Reminders">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Reminders</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg2:#f2f2f7; --card:#ffffff; --text:#000; --sub:#8e8e93; --sep:rgba(60,60,67,.18);
+    --blue:#ff9500; --green:#34c759; --orange:#ff9500; --red:#ff3b30; --fill:rgba(120,120,128,.12);
+    --circle:#c7c7cc; --nav:rgba(255,255,255,.92); --shadow:0 0 0 .5px rgba(0,0,0,.08),0 6px 24px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#000; --bg2:#1c1c1e; --card:#1c1c1e; --text:#fff; --sub:#8e8e93; --sep:rgba(84,84,88,.6);
+      --blue:#ff9f0a; --green:#30d158; --orange:#ff9f0a; --red:#ff453a; --fill:rgba(118,118,128,.24);
+      --circle:#48484a; --nav:rgba(18,18,18,.8); --shadow:0 0 0 .5px rgba(255,255,255,.1);
+    }
+    .sheet{background:#1c1c1e !important}
+    .sheet .group{background:#2c2c2e !important}
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overscroll-behavior:none}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Helvetica Neue",sans-serif;
+    background:var(--bg2);color:var(--text);-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  input,textarea{font:inherit;color:inherit}
+  .phone{max-width:430px;margin:0 auto;height:100%;min-height:100%;background:var(--bg);position:relative;overflow:hidden}
+  @media (min-width:600px){
+    body{padding:24px 0}
+    .phone{min-height:860px;height:860px;border-radius:44px;box-shadow:0 0 0 10px #1d1d1f,0 20px 60px rgba(0,0,0,.35)}
+  }
+  .scroll{position:absolute;inset:0;overflow-y:auto;padding-bottom:90px}
+  /* nav */
+  .nav{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 8px;background:var(--nav);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
+  .nav .back{color:var(--blue);display:flex;align-items:center;padding:4px 4px 4px 0}
+  .nav .back svg{width:13px;height:22px}
+  .nav .icons{display:flex;gap:22px;align-items:center}
+  .nav .icons button{color:var(--blue);display:grid;place-items:center;width:28px;height:28px}
+  .nav .icons svg{width:24px;height:24px}
+  .nav.scrolled{border-bottom:.5px solid var(--sep)}
+  .menu{position:absolute;z-index:30;top:calc(env(safe-area-inset-top) + 52px);right:12px;width:240px;border-radius:13px;overflow:hidden;
+    background:rgba(250,250,250,.96);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 10px 40px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06);
+    transform-origin:top right;transform:scale(.6);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.2,.9,.3,1.2),opacity .15s}
+  .menu.show{transform:scale(1);opacity:1;pointer-events:auto}
+  .menu button{display:flex;justify-content:space-between;align-items:center;width:100%;padding:11px 16px;font-size:17px;text-align:left;border-bottom:.5px solid var(--sep)}
+  .menu button:last-child{border-bottom:0}
+  .menu button.sep{border-bottom:7px solid rgba(0,0,0,.06)}
+  .menu button span.ic{font-size:17px;width:22px;text-align:center;color:var(--text)}
+  .menu button.red{color:var(--red)}
+  @media (prefers-color-scheme: dark){ .menu{background:rgba(37,37,37,.96)} .menu button.sep{border-bottom-color:rgba(0,0,0,.4)} }
+  .hdr{padding:2px 16px 6px 14px}
+  .hdr h1{margin:0;font-size:34px;line-height:41px;font-weight:700;color:var(--blue);letter-spacing:.2px}
+  .hdr .subv{font-size:15px;color:var(--sub);margin-top:2px}
+  .hdr .count{font-size:34px;font-weight:700;color:var(--blue)}
+  .seg{display:flex;margin:4px 16px 10px;background:var(--fill);border-radius:9px;padding:2px}
+  .seg button{flex:1;padding:6px 0;font-size:13px;font-weight:500;border-radius:7px;transition:background .2s}
+  .seg button.on{background:var(--card);box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+  @media (prefers-color-scheme: dark){ .seg button.on{background:#636366} }
+  /* rows */
+  .row{display:flex;align-items:flex-start;padding:10px 0 0 15px;gap:13px}
+  .row .check{flex:none;width:22px;height:22px;margin-top:0;border-radius:50%;border:1.5px solid var(--circle);
+    position:relative;transition:border-color .2s}
+  .row .check::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--blue);transform:scale(0);transition:transform .22s cubic-bezier(.3,1.6,.6,1)}
+  .row.done .check,.row.pending .check{border-color:var(--blue)}
+  .row.done .check::after,.row.pending .check::after{transform:scale(1)}
+  .row .body{flex:1;min-width:0;padding:0 16px 11px 0;border-bottom:.5px solid var(--sep);cursor:pointer}
+  .row:last-child .body{border-bottom:0}
+  .title-in,.note-in{display:block;width:100%;border:0;outline:0;background:transparent;padding:0;margin:0;resize:none;border-radius:0}
+  .title-in{font-size:17px;line-height:22px;height:22px}
+  .note-in{font-size:15px;line-height:20px;color:var(--sub);margin-top:2px;overflow:hidden;min-height:20px}
+  .note-in::placeholder{color:var(--circle)}
+  .row.done .title-in{color:var(--sub)}
+  .row .title{font-size:17px;line-height:22px;word-break:break-word}
+  .row.done .title{color:var(--sub)}
+  .row .sub{font-size:15px;color:var(--sub);margin-top:2px;line-height:20px;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+  .row .log{font-size:14px;color:var(--sub);margin-top:4px;line-height:19px;display:flex;gap:6px;align-items:flex-start}
+  .row .log .dot{flex:none;width:7px;height:7px;border-radius:50%;margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:3px}
+  .chip{font-size:13px;padding:0;color:var(--sub);display:inline-flex;gap:3px;align-items:center;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .chip.link{color:var(--blue)}
+  .row .info{flex:none;color:var(--blue);width:24px;height:24px;margin:0 14px 0 -8px}
+  .row .body.editing{padding-right:12px}
+  .section-h{display:flex;justify-content:space-between;align-items:center;padding:22px 20px 6px;font-size:15px;color:var(--sub)}
+  .section-h button{color:var(--blue);font-size:15px}
+  .empty{padding:30px 20px;color:var(--sub);text-align:center;font-size:15px}
+  .foot{padding:30px 20px 10px;text-align:center}
+  .foot button{color:var(--sub);font-size:13px;text-decoration:underline}
+  /* bottom bar */
+  .bottom{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:10px 14px calc(env(safe-area-inset-bottom) + 16px);
+    background:linear-gradient(to top,var(--bg) 70%,transparent);display:flex;justify-content:space-between;align-items:center}
+  .bottom .add{display:flex;align-items:center;gap:9px;color:var(--blue);font-size:17px;font-weight:600}
+  .bottom .add i{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal}
+  .bottom .add i svg{width:12px;height:12px}
+  .bottom .hint{font-size:12px;color:var(--sub)}
+  /* graph */
+  .graph-wrap{overflow:auto;padding:6px 0 30px;-webkit-overflow-scrolling:touch}
+  .graph-wrap svg{display:block}
+  .gnode{cursor:pointer}
+  .gnode rect{fill:var(--card);stroke:var(--sep);stroke-width:1}
+  .gnode.done rect{fill:var(--bg2)}
+  .gnode.hl rect{stroke:var(--blue);stroke-width:2}
+  .gnode text{fill:var(--text);font-size:13px}
+  .gnode.done text.t{fill:var(--sub)}
+  .gnode text.s{fill:var(--sub);font-size:11px}
+  .gedge{fill:none;stroke:var(--circle);stroke-width:1.5}
+  .gedge.hl{stroke:var(--blue);stroke-width:2}
+  .legend{display:flex;gap:14px;padding:0 20px 6px;font-size:12px;color:var(--sub);flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend b{width:9px;height:9px;border-radius:50%;display:inline-block}
+  /* sheets */
+  .overlay{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s}
+  .overlay.show{opacity:1;pointer-events:auto}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;max-height:92%;display:flex;flex-direction:column;
+    background:var(--bg2);border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .38s cubic-bezier(.2,.9,.25,1)}
+  .sheet.show{transform:translateY(0)}
+  .sheet.center{left:20px;right:20px;top:50%;bottom:auto;max-height:80%;border-radius:16px;opacity:0;pointer-events:none;
+    transform:translateY(-50%) scale(.9);transition:transform .28s cubic-bezier(.2,.9,.3,1.15),opacity .2s;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .sheet.center.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
+  .sheet.center .grab{display:none}
+  .sheet.tall{height:90%;max-height:90%}
+  .sheet .group .row{padding-left:14px}
+  .sheet .group .row .body{padding-right:14px}
+  .donecount{font-size:13px;color:var(--sub);padding:0 16px 8px}
+  .sheet.center .sh-body{padding-bottom:16px}
+  .grab{width:36px;height:5px;border-radius:3px;background:var(--circle);margin:6px auto 0}
+  .sh-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px}
+  .sh-nav .l,.sh-nav .r{color:var(--blue);font-size:17px;min-width:64px}
+  .sh-nav .r{text-align:right;font-weight:600}
+  .sh-nav .r:disabled{color:var(--sub)}
+  .sh-nav .c{font-size:17px;font-weight:600}
+  .sh-body{overflow-y:auto;padding:0 16px calc(env(safe-area-inset-bottom) + 24px)}
+  .group{background:var(--card);border-radius:10px;overflow:hidden;margin-bottom:18px}
+  .group .gi{padding:12px 16px;border-bottom:.5px solid var(--sep);font-size:17px}
+  .group .gi:last-child{border-bottom:0}
+  .group input.gi,.group textarea.gi{width:100%;border:0;outline:0;background:transparent;display:block;border-radius:0}
+  .group textarea.gi{resize:none;min-height:96px;line-height:22px}
+  .glabel{font-size:13px;color:var(--sub);text-transform:uppercase;padding:0 16px 6px;letter-spacing:.2px}
+  .gfoot{font-size:13px;color:var(--sub);padding:0 16px;margin:-12px 0 18px;line-height:18px}
+  .status{display:flex;gap:8px;padding:12px 16px}
+  .status button{flex:1;padding:9px 0;border-radius:9px;background:var(--fill);font-size:14px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .status button .e{font-size:18px}
+  .status button.on{color:#fff}
+  .status button.on[data-s="ok"]{background:var(--green)}
+  .status button.on[data-s="part"]{background:var(--orange)}
+  .status button.on[data-s="issue"]{background:var(--red)}
+  .fu{display:flex;align-items:center;gap:10px;padding:0 0 0 16px;border-bottom:.5px solid var(--sep)}
+  .fu:last-child{border-bottom:0}
+  .fu .ring{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--circle)}
+  .fu input{flex:1;border:0;outline:0;background:transparent;padding:12px 0;font-size:17px;min-width:0}
+  .fu .rm{flex:none;width:44px;height:44px;color:var(--red);font-size:20px}
+  .addrow{display:flex;align-items:center;gap:10px;padding:12px 16px;color:var(--blue);font-size:17px;width:100%;text-align:left}
+  .addrow i{width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-style:normal;font-size:16px;line-height:1}
+  .done-title{padding:4px 4px 16px;font-size:15px;color:var(--sub);text-align:center}
+  .done-title b{color:var(--text);font-weight:600;font-size:17px;display:block;margin-top:4px}
+  .kv{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .kv .k{color:var(--text)} .kv .v{color:var(--sub);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-row{display:flex;align-items:center;gap:10px;cursor:pointer;width:100%;text-align:left}
+  .nav-row .ring{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--circle)}
+  .nav-row .ring.f{border-color:var(--blue);background:radial-gradient(circle,var(--blue) 55%,transparent 58%)}
+  .nav-row .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-row .chev{color:var(--circle);font-size:20px}
+  .nav-row .tag{font-size:12px;color:var(--sub);flex:none}
+  .logcard{padding:14px 16px}
+  .logcard .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;color:var(--sub)}
+  .pill{font-size:12px;font-weight:600;padding:3px 9px;border-radius:10px;color:#fff}
+  .logcard .txt{font-size:16px;line-height:23px;white-space:pre-wrap;word-break:break-word}
+  .logcard .txt.none{color:var(--sub)}
+  .btn-row{display:block;width:100%;text-align:center;padding:13px;font-size:17px;color:var(--blue)}
+  .btn-row.red{color:var(--red)}
+  .chain{display:flex;flex-direction:column;padding:12px 16px;gap:0}
+  .chain .step{display:flex;gap:10px;align-items:stretch;cursor:pointer}
+  .chain .rail{display:flex;flex-direction:column;align-items:center;width:14px;flex:none}
+  .chain .rail .d{width:10px;height:10px;border-radius:50%;border:2px solid var(--circle);margin-top:5px;flex:none}
+  .chain .rail .d.f{background:var(--blue);border-color:var(--blue)}
+  .chain .rail .ln{flex:1;width:2px;background:var(--sep);margin:2px 0}
+  .chain .step:last-child .ln{display:none}
+  .chain .tx{padding-bottom:12px;font-size:15px;min-width:0}
+  .chain .tx.cur{font-weight:600}
+  .chain .tx small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+  select.gi{width:100%;border:0;outline:0;background:transparent;font:inherit;color:var(--text);appearance:none;-webkit-appearance:none}
+  .toast{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 64px);z-index:40;transform:translate(-50%,-20px);opacity:0;
+    background:rgba(40,40,40,.92);color:#fff;font-size:14px;padding:9px 16px;border-radius:20px;transition:all .3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="scroll" id="scroll">
+    <div class="nav">
+      <button class="back" id="backBtn" aria-label="Back"><svg viewBox="0 0 13 22"><path d="M11 2 2 11l9 9" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="icons">
+        <button id="shareBtn" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M8.5 10.5H6.5a1.5 1.5 0 0 0-1.5 1.5v8a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg></button>
+        <button id="moreBtn" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7.6" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="16.4" cy="12" r="1.4" fill="currentColor"/></svg></button>
+      </div>
+    </div>
+    <div class="hdr"><h1>Reminders</h1><div class="subv" id="subv"></div></div>
+    <div id="main"></div>
+  </div>
+  <div class="bottom">
+    <button class="add" id="addBtn"><i><svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></i>New Reminder</button>
+  </div>
+  <div class="menu" id="menu"></div>
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetInner" style="display:flex;flex-direction:column;min-height:0;flex:1"></div></div>
+  <div class="toast" id="toast"></div>
+  <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
+</div>
+
+<script>
+(function(){
+  const KEY='linked-reminders-v1';
+  const STATUS={ok:{label:'Done',e:'✅',color:'var(--green)'},part:{label:'Partly done',e:'🟠',color:'var(--orange)'},issue:{label:'Blocked',e:'⚠️',color:'var(--red)'}};
+  const $=s=>document.querySelector(s);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const uid=()=>Math.random().toString(36).slice(2,9);
+  const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+  let state={todos:[],view:'list',hl:null,editing:null};
+
+  function seed(){
+    const now=Date.now(),h=3600e3,d=24*h;
+    return [
+      {id:'a',title:'Request quotes from suppliers',note:'Packaging boxes × 5,000',createdAt:now-3*d,done:true,doneAt:now-2*d,log:{status:'ok',text:'Got 3 quotes: A is cheapest but 30-day lead time, B is mid-price with 10 days, C is the most expensive.'}},
+      {id:'b',title:'Compare the three quotes',parentId:'a',createdAt:now-2*d,done:true,doneAt:now-1*d+2*h,log:{status:'part',text:'B is best overall, but payment terms are unclear — they want 50% upfront.'}},
+      {id:'c',title:'Confirm payment terms with B',note:'Push for 30% upfront',parentId:'b',createdAt:now-1*d+2*h,done:false},
+      {id:'d',title:'Ask A if lead time can be shortened',parentId:'a',createdAt:now-2*d,done:false},
+      {id:'e',title:'Book a health check-up',createdAt:now-4*d,done:true,doneAt:now-3*d,log:{status:'ok',text:'Booked for Nov 20, 8:30 AM, clinic level 3.'}},
+      {id:'f',title:'Fast after 10 PM the night before',parentId:'e',createdAt:now-3*d,done:false},
+      {id:'g',title:'Write weekly report',createdAt:now-5*h,done:false},
+      {id:'h',title:'Buy milk',createdAt:now-2*h,done:false},
+    ];
+  }
+  function load(){
+    try{const raw=localStorage.getItem(KEY); if(raw){const o=JSON.parse(raw); if(Array.isArray(o.todos)){state.todos=o.todos;return;}}}catch(e){}
+    state.todos=[];
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({todos:state.todos}))}catch(e){}}
+
+  const byId=id=>state.todos.find(t=>t.id===id);
+  const kids=id=>state.todos.filter(t=>t.parentId===id).sort((a,b)=>a.createdAt-b.createdAt);
+  function chainOf(t){const arr=[];let c=t,guard=0;while(c&&guard++<50){arr.unshift(c);c=c.parentId?byId(c.parentId):null}return arr}
+
+  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmt(ts){
+    if(!ts) return '';
+    const d=new Date(ts),n=new Date();
+    const hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    const day=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime();
+    const diff=Math.round((day(n)-day(d))/864e5);
+    if(diff===0) return 'Today '+hm;
+    if(diff===1) return 'Yesterday '+hm;
+    return MON[d.getMonth()]+' '+d.getDate()+', '+hm;
+  }
+  const p2=n=>String(n).padStart(2,'0');
+  const isoLocal=ts=>{if(!ts) return '';const d=new Date(ts);return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`};
+  function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2000)}
+
+  const INFO_SVG='<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/><path d="M12 11v6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+  let pendingRender=false;
+
+  /* ---------- inline editing ---------- */
+  function editingRow(){return state.editing?document.querySelector(`#main .row[data-id="${state.editing}"]`):null}
+  function commitEdit(doRender){
+    const id=state.editing;if(!id) return null;
+    const t=byId(id),row=editingRow();state.editing=null;
+    if(!t){if(doRender)render();return null}
+    if(row){
+      const ti=row.querySelector('.title-in').value.trim(),no=row.querySelector('.note-in').value.trim();
+      if(ti) t.title=ti; t.note=no;
+    }
+    const wasNew=t._new; delete t._new;
+    if(!t.title){state.todos=state.todos.filter(x=>x.id!==id)}
+    save();
+    if(doRender) render(); else pendingRender=true;
+    return {t,wasNew};
+  }
+  function startEdit(id,focusNote){
+    state.editing=id;state.view='list';render();
+    const row=editingRow();if(!row) return;
+    const ti=row.querySelector('.title-in'),no=row.querySelector('.note-in');
+    const grow=()=>{no.style.height='auto';no.style.height=no.scrollHeight+'px'};grow();no.oninput=grow;
+    ti.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();const r=commitEdit(true);if(r&&r.wasNew&&r.t.title&&byId(r.t.id)) startNew(r.t.parentId)}};
+    no.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();commitEdit(true)}};
+    row.addEventListener('focusout',()=>setTimeout(()=>{if(state.editing===id&&!row.contains(document.activeElement)) commitEdit(true)},250));
+    const f=focusNote?no:ti;f.focus();const L=f.value.length;try{f.setSelectionRange(L,L)}catch(e){}
+    row.scrollIntoView({block:'nearest'});
+  }
+  function startNew(parentId){
+    const t={id:uid(),title:'',note:'',parentId:parentId||undefined,createdAt:Date.now(),done:false,_new:true};
+    state.todos.push(t);startEdit(t.id);
+  }
+  document.addEventListener('pointerdown',e=>{
+    const row=editingRow();if(!row) return;
+    if(e.target.closest('.body.editing')) return;
+    commitEdit(false);
+  },true);
+  document.addEventListener('click',()=>{if(pendingRender){render()}});
+
+  /* ---------- render ---------- */
+  function render(){
+    pendingRender=false;
+    $('#subv').textContent=state.view==='graph'?'Graph · tap a node for details':'';
+    $('#subv').style.display=state.view==='graph'?'block':'none';
+    $('#addBtn').style.visibility=state.view==='graph'?'hidden':'visible';
+    state.view==='list'?renderList():renderGraph();
+  }
+
+  function rowHTML(t){
+    const ks=kids(t.id);
+    if(state.editing===t.id) return `<div class="row ${t.done?'done':''}" data-id="${t.id}">
+      <button class="check" aria-label="Complete"></button>
+      <div class="body editing">
+        <input class="title-in" value="${esc(t.title)}" enterkeyhint="done">
+        <textarea class="note-in" rows="1" placeholder="Notes">${esc(t.note||'')}</textarea>
+      </div>
+      <button class="info" aria-label="Details">${INFO_SVG}</button>
+    </div>`;
+    const chip=ks.length?`<div class="chips"><span class="chip link" data-go="${t.id}">↘ ${plural(ks.length,'follow-up')} ›</span></div>`:'';
+    const log=t.done&&t.log?`<div class="log"><span class="dot" style="background:${STATUS[t.log.status]?.color||'var(--sub)'}"></span><span>${t.log.text?esc(t.log.text):STATUS[t.log.status]?.label||'Done'} · ${fmt(t.doneAt)}</span></div>`:'';
+    return `<div class="row ${t.done?'done':''}" data-id="${t.id}">
+      <button class="check" aria-label="Complete"></button>
+      <div class="body">
+        <div class="title">${esc(t.title)}</div>
+        ${t.note?`<div class="sub">${esc(t.note)}</div>`:''}
+        ${log}${chip}
+      </div>
+    </div>`;
+  }
+
+  function renderList(){
+    const open=state.todos.filter(t=>!t.done).sort((a,b)=>a.createdAt-b.createdAt);
+    $('#main').innerHTML=open.length?`<div>${open.map(rowHTML).join('')}</div>`:`<div class="empty">${state.todos.length?'All Clear 🎉':'No Reminders'}</div>`;
+  }
+
+  function renderGraph(){
+    const W=138,H=58,CW=168,RH=74,PX=16,PY=10;
+    const pos={};let row=0,maxD=0;
+    const roots=state.todos.filter(t=>!t.parentId||!byId(t.parentId)).sort((a,b)=>{
+      const ka=kids(a.id).length?0:1,kb=kids(b.id).length?0:1; return ka-kb||a.createdAt-b.createdAt});
+    const seen=new Set();
+    function place(t,depth){
+      if(seen.has(t.id)) return; seen.add(t.id);
+      maxD=Math.max(maxD,depth);
+      const ks=kids(t.id).filter(k=>!seen.has(k.id));
+      if(!ks.length){pos[t.id]={x:PX+depth*CW,y:PY+row*RH};row++;return}
+      ks.forEach(k=>place(k,depth+1));
+      const ys=ks.map(k=>pos[k.id]?.y).filter(v=>v!=null);
+      pos[t.id]={x:PX+depth*CW,y:ys.length?(ys[0]+ys[ys.length-1])/2:PY+row*RH};
+    }
+    roots.forEach(r=>{place(r,0);row+=0.25});
+    const width=PX*2+maxD*CW+W, height=PY*2+row*RH;
+    const hlSet=new Set();
+    if(state.hl&&byId(state.hl)){chainOf(byId(state.hl)).forEach(t=>hlSet.add(t.id));
+      (function down(id,g){if(g>50)return;kids(id).forEach(k=>{hlSet.add(k.id);down(k.id,g+1)})})(state.hl,0)}
+    let edges='',nodes='';
+    state.todos.forEach(t=>{
+      if(t.parentId&&pos[t.parentId]&&pos[t.id]){
+        const a=pos[t.parentId],b=pos[t.id];
+        const x1=a.x+W,y1=a.y+H/2,x2=b.x,y2=b.y+H/2,mx=(x1+x2)/2;
+        edges+=`<path class="gedge ${hlSet.has(t.id)&&hlSet.has(t.parentId)?'hl':''}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;
+      }
+    });
+    state.todos.forEach(t=>{
+      const p=pos[t.id]; if(!p) return;
+      const title=t.title.length>16?t.title.slice(0,16)+'…':t.title;
+      const col=t.done?(STATUS[t.log?.status]?.color||'var(--blue)'):'var(--circle)';
+      const sub=t.done?(STATUS[t.log?.status]?.label||'Done'):'Open';
+      const kn=kids(t.id).length;
+      nodes+=`<g class="gnode ${t.done?'done':''} ${t.id===state.hl?'hl':''}" data-id="${t.id}" transform="translate(${p.x},${p.y})">
+        <rect width="${W}" height="${H}" rx="12"/>
+        <circle cx="16" cy="${H/2}" r="6" fill="${t.done?col:'none'}" stroke="${col}" stroke-width="1.6"/>
+        <text class="t" x="30" y="${H/2-3}">${esc(title)}</text>
+        <text class="s" x="30" y="${H/2+14}">${sub}${kn?' · '+plural(kn,'follow-up'):''}</text>
+      </g>`;
+    });
+    $('#main').innerHTML=`
+      <div class="legend"><span><b style="background:var(--green)"></b>Done</span><span><b style="background:var(--orange)"></b>Partly done</span><span><b style="background:var(--red)"></b>Blocked</span><span><b style="border:1.5px solid var(--circle)"></b>Open</span></div>
+      <div class="graph-wrap" id="gwrap"><svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${edges}${nodes}</svg></div>`;
+    if(state.hl&&pos[state.hl]){const g=$('#gwrap');g.scrollLeft=Math.max(0,pos[state.hl].x-60);
+      $('#scroll').scrollTop=Math.max(0,pos[state.hl].y-120)}
+  }
+
+  /* ---------- sheet ---------- */
+  let onClose=null;
+  function openSheet(html,closeCb,mode){
+    const s=$('#sheet');
+    $('#sheetInner').innerHTML=html;onClose=closeCb||null;
+    s.style.transition='none';s.classList.toggle('center',mode==='center');s.classList.toggle('tall',mode==='tall');void s.offsetHeight;s.style.transition='';
+    $('#overlay').classList.add('show');
+    requestAnimationFrame(()=>s.classList.add('show'));
+  }
+  function closeSheet(cancelled){
+    $('#overlay').classList.remove('show');$('#sheet').classList.remove('show');
+    const cb=onClose;onClose=null;if(cb) cb(cancelled);
+  }
+  $('#overlay').onclick=()=>closeSheet(true);
+
+  /* completion log */
+  function openComplete(t,editing){
+    let status=t.log?.status||'ok';
+    if(!editing){t.done=true;t.doneAt=Date.now();if(!t.log) t.log={status:'ok',text:''};save();render();}
+    const html=`
+      <div class="sh-nav"><span class="l"></span><span class="c">${editing?'Edit Log':'Completion Log'}</span><button class="r" data-a="save">Save</button></div>
+      <div class="sh-body">
+        <div class="group">
+          <div class="status">${Object.entries(STATUS).map(([k,v])=>`<button data-s="${k}" class="${k===status?'on':''}"><span class="e">${v.e}</span>${v.label}</button>`).join('')}</div>
+          <textarea class="gi" id="logText" placeholder="How did it go? Results, issues, key info…">${esc(t.log?.text||'')}</textarea>
+        </div>
+        ${editing?'':`<div class="group" id="fuList" style="margin-bottom:0"></div>`}
+      </div>`;
+    openSheet(html,cancelled=>{ if(cancelled&&!editing) toast('Completed'); },'center');
+    const sh=$('#sheetInner');
+    sh.querySelectorAll('.status button').forEach(b=>b.onclick=()=>{status=b.dataset.s;sh.querySelectorAll('.status button').forEach(x=>x.classList.toggle('on',x===b))});
+    if(!editing){
+      const list=$('#fuList');
+      const addInput=focus=>{
+        const r=document.createElement('div');r.className='fu';
+        r.innerHTML=`<span class="ring"></span><input placeholder="Follow-up reminder"><button class="rm" aria-label="Remove">−</button>`;
+        r.querySelector('.rm').onclick=()=>r.remove();
+        r.querySelector('input').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addInput(true)}};
+        list.insertBefore(r,list.querySelector('.addrow'));
+        if(focus) r.querySelector('input').focus();
+      };
+      const add=document.createElement('button');add.className='addrow';add.innerHTML='<i>+</i>Add Follow-up';
+      add.onclick=()=>addInput(true);list.appendChild(add);
+    }
+    sh.querySelector('[data-a=save]').onclick=()=>{
+      t.log={status,text:$('#logText').value.trim()};
+      let n=0;
+      if(!editing) sh.querySelectorAll('.fu input').forEach(inp=>{const v=inp.value.trim();if(v){state.todos.push({id:uid(),title:v,parentId:t.id,createdAt:Date.now()+n,done:false});n++}});
+      save();closeSheet(false);render();
+      toast(editing?'Log updated':n?`Saved · ${plural(n,'follow-up')} added`:'Log saved');
+    };
+  }
+
+  /* completed list (90% sheet) */
+  function openCompleted(){
+    const draw=()=>{
+      const done=state.todos.filter(t=>t.done).sort((a,b)=>b.doneAt-a.doneAt);
+      return `
+      <div class="sh-nav"><span class="l"></span><span class="c">Completed</span><button class="r" data-a="close">Done</button></div>
+      <div class="sh-body" id="doneBody">
+        ${done.length?`<div class="donecount">${done.length} completed · tap a circle to restore</div><div class="group">${done.map(rowHTML).join('')}</div>`:`<div class="empty">No completed reminders</div>`}
+      </div>`;
+    };
+    openSheet(draw(),()=>render(),'tall');
+    const bind=()=>{
+      const sh=$('#sheetInner');
+      sh.querySelector('[data-a=close]').onclick=()=>closeSheet(false);
+      sh.querySelector('#doneBody').onclick=e=>{
+        const go=e.target.closest('.chip[data-go]');
+        if(go){closeSheet(false);state.view='graph';state.hl=go.dataset.go;render();return}
+        const row=e.target.closest('.row');if(!row) return;const t=byId(row.dataset.id);if(!t) return;
+        if(e.target.closest('.check')){t.done=false;delete t.doneAt;save();render();sh.innerHTML=draw();bind();toast('Moved back to Reminders');return}
+        closeSheet(false);setTimeout(()=>openDetail(t),280);
+      };
+    };
+    bind();
+  }
+
+  /* details */
+  function openDetail(t){
+    const p=t.parentId?byId(t.parentId):null,ks=kids(t.id),chain=chainOf(t);
+    const st=t.log&&STATUS[t.log.status];
+    const navRow=x=>`<button class="gi nav-row" data-go="${x.id}"><span class="ring ${x.done?'f':''}"></span><span class="tx">${esc(x.title)}</span><span class="tag">${x.done?'Done':''}</span><span class="chev">›</span></button>`;
+    openSheet(`
+      <div class="sh-nav"><span class="l"></span><span class="c">Details</span><button class="r" data-a="close">Done</button></div>
+      <div class="sh-body">
+        <div class="group">
+          <div class="gi" style="font-weight:600">${esc(t.title)}</div>
+          ${t.note?`<div class="gi" style="color:var(--sub);font-size:15px;white-space:pre-wrap">${esc(t.note)}</div>`:''}
+        </div>
+        <div class="group">
+          <div class="gi kv"><span class="k">Created</span><span class="v">${fmt(t.createdAt)}</span></div>
+          <div class="gi kv"><span class="k">Status</span><span class="v">${t.done?'Completed · '+fmt(t.doneAt):'Open'}</span></div>
+        </div>
+        ${t.done?`
+        <div class="glabel">Completion Log</div>
+        <div class="group">
+          <div class="logcard">
+            <div class="top"><span class="pill" style="background:${st?.color||'var(--sub)'}">${st?.e||''} ${st?.label||'Done'}</span><span>${fmt(t.doneAt)}</span></div>
+            <div class="txt ${t.log?.text?'':'none'}">${t.log?.text?esc(t.log.text):'No notes'}</div>
+          </div>
+          <button class="btn-row" data-a="editlog" style="border-top:.5px solid var(--sep)">Edit Log</button>
+        </div>`:`
+        <div class="group"><button class="btn-row" data-a="complete">✓ Mark as Completed</button></div>`}
+        ${chain.length>1||ks.length?`
+        <div class="glabel">Chain</div>
+        <div class="group"><div class="chain">
+          ${chain.map(x=>`<div class="step" data-go="${x.id}"><div class="rail"><span class="d ${x.done?'f':''}"></span><span class="ln"></span></div>
+            <div class="tx ${x.id===t.id?'cur':''}">${esc(x.title)}<small>${x.done?(x.log?.text?esc(x.log.text.slice(0,60))+(x.log.text.length>60?'…':''):'Done'):'Open'}</small></div></div>`).join('')}
+        </div></div>`:''}
+        ${p?`<div class="glabel">Follows</div><div class="group">${navRow(p)}</div>`:''}
+        <div class="glabel">Follow-ups${ks.length?' · '+ks.length:''}</div>
+        <div class="group">
+          ${ks.map(navRow).join('')}
+          <button class="addrow" data-a="newchild" style="border-top:${ks.length?'.5px solid var(--sep)':'0'}"><i>+</i>Add Linked Reminder</button>
+        </div>
+        <div class="group"><button class="btn-row" data-a="graph">View in Graph</button></div>
+        <div class="group"><button class="btn-row red" data-a="del">Delete</button></div>
+      </div>`,()=>render());
+    const sh=$('#sheetInner');
+    sh.querySelector('[data-a=close]').onclick=()=>closeSheet(false);
+    sh.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=>{const x=byId(el.dataset.go);if(x&&x.id!==t.id){closeSheet(false);setTimeout(()=>openDetail(x),260)}});
+    sh.querySelector('[data-a=newchild]').onclick=()=>{closeSheet(false);setTimeout(()=>startNew(t.id),300)};
+    sh.querySelector('[data-a=graph]').onclick=()=>{closeSheet(false);state.view='graph';state.hl=t.id;render()};
+    const c=sh.querySelector('[data-a=complete]'); if(c) c.onclick=()=>{closeSheet(false);setTimeout(()=>{markPending(t.id);openComplete(t,false)},260)};
+    const e=sh.querySelector('[data-a=editlog]'); if(e) e.onclick=()=>{closeSheet(false);setTimeout(()=>openComplete(t,true),260)};
+    const d=sh.querySelector('[data-a=del]');
+    d.onclick=()=>{
+      if(d.dataset.confirm){
+        state.todos.forEach(x=>{if(x.parentId===t.id) x.parentId=t.parentId});
+        state.todos=state.todos.filter(x=>x.id!==t.id);
+        onClose=null;closeSheet(false);save();render();toast('Deleted');
+      }else{d.dataset.confirm=1;d.textContent='Tap Again to Delete'+(ks.length?' (follow-ups kept)':'');}
+    };
+  }
+
+  function markPending(id){const r=document.querySelector(`#main .row[data-id="${id}"]`);if(r) r.classList.add('pending')}
+
+  /* ---------- Excel ---------- */
+  const COLS=['ID','Title','Notes','Status','Created','Completed','Result','Completion Note','Follow-up Of (ID)'];
+  const RESULT_LABEL={ok:'Done',part:'Partly done',issue:'Blocked'};
+  function makeSheet(rows){
+    const ws=XLSX.utils.aoa_to_sheet([COLS,...rows]);
+    ws['!cols']=[{wch:10},{wch:34},{wch:30},{wch:8},{wch:17},{wch:17},{wch:12},{wch:46},{wch:16}];
+    ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:COLS.length-1}})};
+    return ws;
+  }
+  function guideSheet(){
+    const g=[['Column','What to put in it'],
+      ['ID','Any unique text. Leave blank on new rows and one is generated. Rows with an existing ID update that reminder.'],
+      ['Title','Required. Rows without a title are skipped.'],
+      ['Notes','Optional.'],
+      ['Status','Open or Done.'],
+      ['Created','Date/time, e.g. 2026-11-12 14:30. Blank = import time.'],
+      ['Completed','Date/time it was completed (only for Done rows).'],
+      ['Result','Done, Partly done, or Blocked (only for Done rows).'],
+      ['Completion Note','What happened when it was completed.'],
+      ['Follow-up Of (ID)','The ID of the reminder this one follows. This builds the links shown in the graph.']];
+    const ws=XLSX.utils.aoa_to_sheet(g);ws['!cols']=[{wch:20},{wch:90}];return ws;
+  }
+  async function saveWorkbook(wb,filename){
+    if(typeof XLSX==='undefined'){toast('Excel library failed to load');return}
+    const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+    const MIME='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const blob=new Blob([buf],{type:MIME});
+    // iPhone: system share sheet (Save to Files, AirDrop, WeChat…)
+    try{
+      const file=new File([blob],filename,{type:MIME});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file]});toast('Exported');return;
+      }
+    }catch(e){if(e&&e.name==='AbortError'){toast('Export cancelled');return}}
+    // Desktop / fallback: normal download
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Exported');
+  }
+  function exportExcel(){
+    if(typeof XLSX==='undefined'){toast('Excel library failed to load');return}
+    const list=state.todos.slice().sort((a,b)=>a.createdAt-b.createdAt);
+    const rows=list.map(t=>[t.id,t.title,t.note||'',t.done?'Done':'Open',isoLocal(t.createdAt),t.done?isoLocal(t.doneAt):'',
+      t.done?RESULT_LABEL[t.log?.status]||'Done':'',t.done?(t.log?.text||''):'',t.parentId&&byId(t.parentId)?t.parentId:'']);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,makeSheet(rows),'Reminders');
+    XLSX.utils.book_append_sheet(wb,guideSheet(),'Guide');
+    const d=new Date();
+    saveWorkbook(wb,`reminders-${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}.xlsx`);
+  }
+  function exportTemplate(){
+    if(typeof XLSX==='undefined'){toast('Excel library failed to load');return}
+    const rows=[
+      ['T1','Plan team offsite','Budget under $3,000','Done','2026-11-01 09:00','2026-11-03 17:00','Partly done','Venue shortlisted; dates still open.',''],
+      ['T2','Poll team for dates','','Open','2026-11-03 17:05','','','','T1'],
+      ['T3','Get venue quotes','2 venues','Open','2026-11-03 17:06','','','','T1'],
+      ['','A reminder with no ID','IDs are optional for new rows','Open','','','','',''],
+    ];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,makeSheet(rows),'Reminders');
+    XLSX.utils.book_append_sheet(wb,guideSheet(),'Guide');
+    saveWorkbook(wb,'reminders-template.xlsx');
+  }
+  function parseTime(v){
+    if(v==null||v==='') return null;
+    if(v instanceof Date) return isNaN(v)?null:v.getTime();
+    if(typeof v==='number') return Math.round((v-25569)*864e5+new Date().getTimezoneOffset()*6e4);
+    const s=String(v).trim().replace(' ','T'); const t=Date.parse(s); return isNaN(t)?null:t;
+  }
+  async function importExcel(file){
+    if(typeof XLSX==='undefined'){toast('Excel library failed to load');return}
+    let rows;
+    try{
+      const wb=XLSX.read(await file.arrayBuffer(),{cellDates:true});
+      const name=wb.SheetNames.find(n=>/remind|todo|待办/i.test(n))||wb.SheetNames[0];
+      rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:'',raw:true});
+    }catch(e){toast('Could not read that file');return}
+    const norm=k=>String(k).toLowerCase().replace(/[^a-z]/g,'');
+    const pick=(r,...keys)=>{for(const k of Object.keys(r)){const n=norm(k);if(keys.some(x=>n===x||n.startsWith(x)))return r[k]}return ''};
+    let added=0,updated=0,skipped=0;const links=[];const now=Date.now();
+    rows.forEach((r,i)=>{
+      const title=String(pick(r,'title')).trim();
+      if(!title){skipped++;return}
+      const rawId=String(pick(r,'id')).trim();
+      const done=/^(done|completed?|yes|y|true|x|✓|已完成|完成)$/i.test(String(pick(r,'status')).trim());
+      const res=String(pick(r,'result')).toLowerCase();
+      const status=/part/.test(res)?'part':/block|issue|problem/.test(res)?'issue':'ok';
+      let t=rawId&&byId(rawId);
+      if(t){updated++}else{t={id:rawId||uid(),createdAt:parseTime(pick(r,'created'))||now+i};state.todos.push(t);added++}
+      t.title=title;t.note=String(pick(r,'notes','note')).trim();
+      if(done){t.done=true;t.doneAt=parseTime(pick(r,'completed'))||t.doneAt||now;t.log={status,text:String(pick(r,'completionnote')).trim()}}
+      else{t.done=false;delete t.doneAt}
+      links.push([t,String(pick(r,'followupof','parent')).trim()]);
+    });
+    links.forEach(([t,pid])=>{
+      if(!pid){return}
+      const p=byId(pid);
+      if(p&&p.id!==t.id&&!chainOf(p).some(x=>x.id===t.id)) t.parentId=p.id;
+    });
+    save();state.view='list';render();
+    toast(`Imported: ${added} new · ${updated} updated${skipped?' · '+skipped+' skipped':''}`);
+  }
+  $('#fileIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f) importExcel(f)};
+
+  /* ---------- menus ---------- */
+  const menu=$('#menu');let menuFor=null;
+  function openMenu(which){
+    menuFor=which;
+    if(which==='share'){
+      menu.style.right='52px';
+      menu.innerHTML=`
+        <button data-m="export">Export to Excel<span class="ic">⇪</span></button>
+        <button data-m="import">Import from Excel<span class="ic">⇩</span></button>
+        <button data-m="template">Download Template<span class="ic">▦</span></button>`;
+    }else{
+      menu.style.right='12px';
+      const n=state.todos.filter(t=>t.done).length;
+      menu.innerHTML=`
+        <button data-m="completed" class="sep">Show Completed${n?' ('+n+')':''}<span class="ic">◉</span></button>
+        <button data-m="view" style="border-bottom:0">${state.view==='graph'?'View as List':'View as Graph'}<span class="ic">${state.view==='graph'?'☰':'⑂'}</span></button>`;
+    }
+    menu.classList.add('show');
+  }
+  const closeMenu=()=>{menu.classList.remove('show');menuFor=null};
+  $('#moreBtn').onclick=e=>{e.stopPropagation();menuFor==='more'?closeMenu():openMenu('more')};
+  $('#shareBtn').onclick=e=>{e.stopPropagation();menuFor==='share'?closeMenu():openMenu('share')};
+  menu.onclick=e=>{const b=e.target.closest('button');if(!b)return;closeMenu();const m=b.dataset.m;
+    if(m==='completed') openCompleted();
+    if(m==='view'){state.view=state.view==='graph'?'list':'graph';state.hl=null;render()}
+    if(m==='reset'){state.todos=seed();state.hl=null;save();render();toast('Sample data restored')}
+    if(m==='export') exportExcel();
+    if(m==='template') exportTemplate();
+    if(m==='import') $('#fileIn').click();
+  };
+  document.addEventListener('pointerdown',e=>{if(menu.classList.contains('show')&&!e.target.closest('#menu,#moreBtn,#shareBtn')) closeMenu()});
+
+  /* ---------- list events ---------- */
+  $('#main').addEventListener('click',e=>{
+    const go=e.target.closest('.chip[data-go]');
+    if(go){e.stopPropagation();state.view='graph';state.hl=go.dataset.go;render();return}
+    const g=e.target.closest('.gnode');
+    if(g){const t=byId(g.dataset.id);state.hl=t.id;renderGraph();openDetail(t);return}
+    const row=e.target.closest('.row');if(!row) return;
+    const t=byId(row.dataset.id);if(!t) return;
+    if(e.target.closest('.body.editing')) return;
+    if(e.target.closest('.info')){openDetail(t);return}
+    if(e.target.closest('.check')){
+      if(t.done){t.done=false;delete t.doneAt;save();render();}
+      else{markPending(t.id);setTimeout(()=>openComplete(t,false),220);}
+      return;
+    }
+    if(e.target.closest('.body')) startEdit(t.id,!!e.target.closest('.sub'));
+  });
+  $('#backBtn').onclick=()=>{if(state.view==='graph'){state.view='list';state.hl=null;render()}};
+  $('#scroll').addEventListener('scroll',()=>$('.nav').classList.toggle('scrolled',$('#scroll').scrollTop>40));
+  $('#addBtn').onclick=()=>startNew(null);
+
+  load();render();
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
+})();
+</script>
+</body>
+</html>
