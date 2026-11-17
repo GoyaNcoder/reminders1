@@ -1,5 +1,5 @@
 // Offline cache: app shell + Excel library. Bump VERSION when files change.
-const VERSION = 'reminders-v1';
+const VERSION = 'reminders-v2';
 const ASSETS = [
   './',
   './index.html',

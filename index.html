@@ -192,6 +192,58 @@
   .toast{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 64px);z-index:40;transform:translate(-50%,-20px);opacity:0;
     background:rgba(40,40,40,.92);color:#fff;font-size:14px;padding:9px 16px;border-radius:20px;transition:all .3s;pointer-events:none;white-space:nowrap}
   .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* count mode */
+  .row .check.cnt{border-color:var(--blue);background:conic-gradient(var(--blue) calc(var(--p)*360deg),var(--fill) 0)}
+  .row .check.cnt::after{inset:2.5px;background:var(--bg);transform:scale(1)}
+  .sheet .row .check.cnt::after{background:var(--card)}
+  .row .check.cnt span{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--blue);z-index:1}
+  .check.bump{animation:bump .3s ease}
+  @keyframes bump{50%{transform:scale(1.25)}}
+  .cmeta{font-size:13px;color:var(--blue);margin-top:3px;line-height:18px}
+  .cmeta.met{color:var(--green)}
+  /* focus mode */
+  .sub.focus{-webkit-line-clamp:3;cursor:zoom-in}
+  .fi{color:var(--blue);margin-right:4px;display:inline-block;vertical-align:-1px}
+  .empty-note{color:var(--circle) !important}
+  .sheet.focus{left:7%;right:7%;height:80%;max-height:80%}
+  .sheet.focus .sh-body{flex:1;display:flex;padding-bottom:16px}
+  .fc-text{flex:1;width:100%;border:0;outline:0;background:var(--card);border-radius:12px;padding:16px;font-size:17px;line-height:1.6;resize:none;color:var(--text)}
+  .fc-title{max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dnote{color:var(--sub);font-size:15px !important;white-space:pre-wrap}
+  .dnote.focus{cursor:zoom-in;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  /* details controls */
+  .kv .k{min-width:0}
+  .kv .k small{display:block;font-size:13px;color:var(--sub);margin-top:2px;line-height:17px}
+  .sw{flex:none;position:relative;width:51px;height:31px;border-radius:16px;background:rgba(120,120,128,.16);transition:background .25s}
+  .sw i{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16);transition:transform .25s}
+  .sw.on{background:var(--green)} .sw.on i{transform:translateX(20px)}
+  .numwrap{display:flex;align-items:center;gap:6px;color:var(--sub);flex:none}
+  .num{width:66px;text-align:right;border:0;outline:0;background:var(--fill);border-radius:8px;padding:5px 8px;font-size:17px;color:var(--text);font-family:inherit}
+  .date{border:0;outline:0;background:var(--fill);border-radius:8px;padding:5px 8px;font-size:16px;color:var(--text);font-family:inherit;min-width:0;-webkit-appearance:none;appearance:none;min-height:32px}
+  .group .skiprow{display:flex;align-items:center;gap:8px;padding:8px 0 8px 16px}
+  .skiprow .date{flex:1}
+  .dash{color:var(--sub)}
+  .skiprow .rm,.chkrow .rm{flex:none;min-width:44px;height:36px;color:var(--red);font-size:20px}
+  .rm.confirm{font-size:14px;font-weight:600;padding:0 12px}
+  .group .chkrow{display:flex;align-items:flex-start;gap:10px;padding:10px 0 10px 16px}
+  .chkrow .dot{width:8px;height:8px;border-radius:50%;margin-top:7px;flex:none}
+  .chkrow .ct{flex:1;min-width:0;font-size:15px;color:var(--sub);word-break:break-word}
+  .chkrow .ct b{display:block;font-weight:500;color:var(--text)}
+  /* graph drag */
+  .graph-wrap{-webkit-user-select:none;user-select:none}
+  .graph-wrap svg{overflow:visible}
+  .gnode{-webkit-touch-callout:none;cursor:grab}
+  .gnode text{pointer-events:none}
+  .gnode.dragging{opacity:.92;filter:drop-shadow(0 10px 18px rgba(0,0,0,.28));cursor:grabbing}
+  .gnode.drop rect{stroke:var(--blue);stroke-width:2.5;stroke-dasharray:5 4}
+  .gnode.nodrop{opacity:.35}
+  .unlink{position:absolute;z-index:16;left:16px;right:16px;top:calc(env(safe-area-inset-top) + 58px);height:52px;border-radius:14px;border:2px dashed var(--red);color:var(--red);
+    background:rgba(255,255,255,.94);display:grid;place-items:center;font-size:15px;font-weight:600;opacity:0;transform:translateY(-8px);pointer-events:none;transition:all .2s;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .unlink.show{opacity:1;transform:none}
+  .unlink.hot{background:var(--red);color:#fff}
+  @media (prefers-color-scheme: dark){ .unlink{background:rgba(28,28,30,.94)} .unlink.hot{background:var(--red)} .fc-text{background:#2c2c2e} .sw{background:rgba(120,120,128,.32)} }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -215,6 +267,7 @@
   <div class="overlay" id="overlay"></div>
   <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetInner" style="display:flex;flex-direction:column;min-height:0;flex:1"></div></div>
   <div class="toast" id="toast"></div>
+  <div class="unlink" id="unlinkZone">Drop here to unlink</div>
   <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
 </div>
 
@@ -269,6 +322,58 @@
   const INFO_SVG='<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/><path d="M12 11v6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
   let pendingRender=false;
 
+  /* ---------- count mode engine ---------- */
+  // China mainland statutory holidays (State Council notices) — off days and make-up workdays
+  const CN_HOL={
+    2026:{off:[['01-01','01-03'],['02-15','02-23'],['04-04','04-06'],['05-01','05-05'],['06-19','06-21'],['09-25','09-27'],['10-01','10-07']],work:['01-04','02-14','02-28','05-09','09-20','10-10']},
+    2027:{off:[['01-01','01-03'],['02-05','02-13'],['04-03','04-05'],['05-01','05-05'],['06-09','06-09'],['09-15','09-15'],['10-01','10-07']],work:['01-31','02-14','05-08','09-26','10-09']},
+  };
+  const HOL_OFF=new Set(),HOL_WORK=new Set();
+  Object.entries(CN_HOL).forEach(([y,v])=>{
+    v.work.forEach(d=>HOL_WORK.add(y+'-'+d));
+    v.off.forEach(([a,b])=>{let d=keyToDate(y+'-'+a);const end=y+'-'+b;while(dKey(d)<=end){HOL_OFF.add(dKey(d));d=addDays(d,1)}});
+  });
+  const HOL_YEARS=Object.keys(CN_HOL);
+  function dKey(d){return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`}
+  function keyToDate(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d,12)}
+  function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+  const todayKey=()=>dKey(new Date());
+  function fmtKey(k){const d=keyToDate(k);return MON[d.getMonth()]+' '+d.getDate()}
+  function isHoliday(k){if(HOL_WORK.has(k)) return false;if(HOL_OFF.has(k)) return true;const w=keyToDate(k).getDay();return w===0||w===6}
+  function skipReason(c,k){
+    for(const r of c.skips||[]){if(r.from&&k>=r.from&&k<=(r.to||r.from)) return 'custom'}
+    if(c.skipHolidays&&isHoliday(k)) return HOL_OFF.has(k)?'holiday':'weekend';
+    return '';
+  }
+  function newCount(){return {enabled:true,days:7,times:3,periods:null,skipHolidays:true,skips:[],start:todayKey(),checks:[]}}
+  // Walk active (non-skipped) days from start; every `days` active days form one period.
+  function countStatus(t){
+    const c=t.count,N=Math.max(1,c.days|0||1),M=Math.max(1,c.times|0||1);
+    const tk=todayKey();
+    const checkKeys=(c.checks||[]).map(x=>dKey(new Date(x.at)));
+    let last=[tk,...checkKeys].sort().pop();
+    const periodOfDay=new Map(),ranges=[];
+    // A skipped day belongs to the period of the next active day (so a rest-day check-in is never wasted).
+    let d=keyToDate(c.start||tk),active=0,guard=0,lastP=null;
+    while(guard++<3000){
+      const k=dKey(d);
+      const p=Math.floor(active/N);
+      if(!skipReason(c,k)){active++;(ranges[p]=ranges[p]||[k,k])[1]=k}
+      periodOfDay.set(k,p);
+      if(k>=last&&lastP===null) lastP=p;
+      if(lastP!==null&&active>=(lastP+1)*N) break;
+      d=addDays(d,1);
+    }
+    const perPeriod=[];
+    checkKeys.forEach(k=>{const p=k<(c.start||tk)?0:(periodOfDay.get(k)??0);perPeriod[p]=(perPeriod[p]||0)+1});
+    const cur=tk<(c.start||tk)?0:(periodOfDay.get(tk)??0);
+    let achieved=0,missed=0;
+    for(let i=0;i<Math.max(perPeriod.length,cur+1);i++){if((perPeriod[i]||0)>=M)achieved++;else if(i<cur)missed++}
+    return {N,M,P:c.periods||null,period:cur,count:perPeriod[cur]||0,range:ranges[cur]||[tk,tk],achieved,missed,
+      todaySkip:skipReason(c,tk),notStarted:tk<(c.start||tk),noHolidayData:c.skipHolidays&&!HOL_YEARS.includes(tk.slice(0,4))};
+  }
+  const rangeText=r=>r[0]===r[1]?fmtKey(r[0]):fmtKey(r[0])+' – '+fmtKey(r[1]);
+
   /* ---------- inline editing ---------- */
   function editingRow(){return state.editing?document.querySelector(`#main .row[data-id="${state.editing}"]`):null}
   function commitEdit(doRender){
@@ -276,8 +381,8 @@
     const t=byId(id),row=editingRow();state.editing=null;
     if(!t){if(doRender)render();return null}
     if(row){
-      const ti=row.querySelector('.title-in').value.trim(),no=row.querySelector('.note-in').value.trim();
-      if(ti) t.title=ti; t.note=no;
+      const ti=row.querySelector('.title-in').value.trim(),noEl=row.querySelector('.note-in');
+      if(ti) t.title=ti; if(noEl) t.note=noEl.value.trim();
     }
     const wasNew=t._new; delete t._new;
     if(!t.title){state.todos=state.todos.filter(x=>x.id!==id)}
@@ -289,11 +394,13 @@
     state.editing=id;state.view='list';render();
     const row=editingRow();if(!row) return;
     const ti=row.querySelector('.title-in'),no=row.querySelector('.note-in');
-    const grow=()=>{no.style.height='auto';no.style.height=no.scrollHeight+'px'};grow();no.oninput=grow;
+    if(no){
+      const grow=()=>{no.style.height='auto';no.style.height=no.scrollHeight+'px'};grow();no.oninput=grow;
+      no.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();commitEdit(true)}};
+    }
     ti.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();const r=commitEdit(true);if(r&&r.wasNew&&r.t.title&&byId(r.t.id)) startNew(r.t.parentId)}};
-    no.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();commitEdit(true)}};
     row.addEventListener('focusout',()=>setTimeout(()=>{if(state.editing===id&&!row.contains(document.activeElement)) commitEdit(true)},250));
-    const f=focusNote?no:ti;f.focus();const L=f.value.length;try{f.setSelectionRange(L,L)}catch(e){}
+    const f=focusNote&&no?no:ti;f.focus();const L=f.value.length;try{f.setSelectionRange(L,L)}catch(e){}
     row.scrollIntoView({block:'nearest'});
   }
   function startNew(parentId){
@@ -310,30 +417,51 @@
   /* ---------- render ---------- */
   function render(){
     pendingRender=false;
-    $('#subv').textContent=state.view==='graph'?'Graph · tap a node for details':'';
+    $('#subv').textContent=state.view==='graph'?(matchMedia('(hover:hover)').matches?'Tap to open · drag onto another to relink':'Tap to open · hold & drag to relink'):'';
     $('#subv').style.display=state.view==='graph'?'block':'none';
     $('#addBtn').style.visibility=state.view==='graph'?'hidden':'visible';
     state.view==='list'?renderList():renderGraph();
   }
 
+  function checkBtn(t){
+    if(t.count?.enabled&&!t.done){
+      const s=countStatus(t),f=Math.min(1,s.count/s.M);
+      return `<button class="check cnt" style="--p:${f}" aria-label="Check in"><span>${s.count||''}</span></button>`;
+    }
+    return `<button class="check" aria-label="Complete"></button>`;
+  }
+  function countMeta(t){
+    if(!t.count?.enabled) return '';
+    const s=countStatus(t);
+    if(t.done) return `<div class="cmeta">⟳ ${s.P?`${Math.min(s.achieved,s.P)}/${s.P} periods`:plural(s.achieved,'period')+' achieved'}</div>`;
+    const bits=[`${s.count}/${s.M} ${s.notStarted?'from '+fmtKey(t.count.start):'· '+rangeText(s.range)}`];
+    if(s.P) bits.push(`${s.achieved}/${s.P} periods`);
+    if(s.todaySkip&&!s.notStarted) bits.push(s.todaySkip==='custom'?'paused today':'rest day');
+    return `<div class="cmeta ${s.count>=s.M?'met':''}">⟳ ${bits.join(' · ')}</div>`;
+  }
+  const FOCUS_ICON='<svg viewBox="0 0 16 16" width="13" height="13"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function noteHTML(t,editing){
+    if(!t.note) return t.focus&&editing?`<div class="sub focus empty-note"><span class="fi">${FOCUS_ICON}</span>Notes</div>`:'';
+    return `<div class="sub ${t.focus?'focus':''}">${t.focus?`<span class="fi">${FOCUS_ICON}</span>`:''}${esc(t.note)}</div>`;
+  }
   function rowHTML(t){
     const ks=kids(t.id);
     if(state.editing===t.id) return `<div class="row ${t.done?'done':''}" data-id="${t.id}">
-      <button class="check" aria-label="Complete"></button>
+      ${checkBtn(t)}
       <div class="body editing">
         <input class="title-in" value="${esc(t.title)}" enterkeyhint="done">
-        <textarea class="note-in" rows="1" placeholder="Notes">${esc(t.note||'')}</textarea>
+        ${t.focus?noteHTML(t,true):`<textarea class="note-in" rows="1" placeholder="Notes">${esc(t.note||'')}</textarea>`}
       </div>
       <button class="info" aria-label="Details">${INFO_SVG}</button>
     </div>`;
     const chip=ks.length?`<div class="chips"><span class="chip link" data-go="${t.id}">↘ ${plural(ks.length,'follow-up')} ›</span></div>`:'';
     const log=t.done&&t.log?`<div class="log"><span class="dot" style="background:${STATUS[t.log.status]?.color||'var(--sub)'}"></span><span>${t.log.text?esc(t.log.text):STATUS[t.log.status]?.label||'Done'} · ${fmt(t.doneAt)}</span></div>`:'';
     return `<div class="row ${t.done?'done':''}" data-id="${t.id}">
-      <button class="check" aria-label="Complete"></button>
+      ${checkBtn(t)}
       <div class="body">
         <div class="title">${esc(t.title)}</div>
-        ${t.note?`<div class="sub">${esc(t.note)}</div>`:''}
-        ${log}${chip}
+        ${noteHTML(t)}
+        ${countMeta(t)}${log}${chip}
       </div>
     </div>`;
   }
@@ -343,9 +471,10 @@
     $('#main').innerHTML=open.length?`<div>${open.map(rowHTML).join('')}</div>`:`<div class="empty">${state.todos.length?'All Clear 🎉':'No Reminders'}</div>`;
   }
 
+  const GW=138,GH=58;let graphPos={};
   function renderGraph(){
-    const W=138,H=58,CW=168,RH=74,PX=16,PY=10;
-    const pos={};let row=0,maxD=0;
+    const W=GW,H=GH,CW=168,RH=74,PX=16,PY=10;
+    const pos={};let row=0,maxD=0;graphPos=pos;
     const roots=state.todos.filter(t=>!t.parentId||!byId(t.parentId)).sort((a,b)=>{
       const ka=kids(a.id).length?0:1,kb=kids(b.id).length?0:1; return ka-kb||a.createdAt-b.createdAt});
     const seen=new Set();
@@ -375,7 +504,8 @@
       const p=pos[t.id]; if(!p) return;
       const title=t.title.length>16?t.title.slice(0,16)+'…':t.title;
       const col=t.done?(STATUS[t.log?.status]?.color||'var(--blue)'):'var(--circle)';
-      const sub=t.done?(STATUS[t.log?.status]?.label||'Done'):'Open';
+      let sub=t.done?(STATUS[t.log?.status]?.label||'Done'):'Open';
+      if(t.count?.enabled&&!t.done){const cs=countStatus(t);sub=`⟳ ${cs.count}/${cs.M}${cs.P?` · ${cs.achieved}/${cs.P}`:''}`}
       const kn=kids(t.id).length;
       nodes+=`<g class="gnode ${t.done?'done':''} ${t.id===state.hl?'hl':''}" data-id="${t.id}" transform="translate(${p.x},${p.y})">
         <rect width="${W}" height="${H}" rx="12"/>
@@ -386,7 +516,7 @@
     });
     $('#main').innerHTML=`
       <div class="legend"><span><b style="background:var(--green)"></b>Done</span><span><b style="background:var(--orange)"></b>Partly done</span><span><b style="background:var(--red)"></b>Blocked</span><span><b style="border:1.5px solid var(--circle)"></b>Open</span></div>
-      <div class="graph-wrap" id="gwrap"><svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${edges}${nodes}</svg></div>`;
+      <div class="graph-wrap" id="gwrap"><svg id="gsvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${edges}${nodes}</svg></div>`;
     if(state.hl&&pos[state.hl]){const g=$('#gwrap');g.scrollLeft=Math.max(0,pos[state.hl].x-60);
       $('#scroll').scrollTop=Math.max(0,pos[state.hl].y-120)}
   }
@@ -396,7 +526,7 @@
   function openSheet(html,closeCb,mode){
     const s=$('#sheet');
     $('#sheetInner').innerHTML=html;onClose=closeCb||null;
-    s.style.transition='none';s.classList.toggle('center',mode==='center');s.classList.toggle('tall',mode==='tall');void s.offsetHeight;s.style.transition='';
+    s.style.transition='none';s.classList.toggle('center',mode==='center'||mode==='focus');s.classList.toggle('focus',mode==='focus');s.classList.toggle('tall',mode==='tall');void s.offsetHeight;s.style.transition='';
     $('#overlay').classList.add('show');
     requestAnimationFrame(()=>s.classList.add('show'));
   }
@@ -422,26 +552,71 @@
     openSheet(html,cancelled=>{ if(cancelled&&!editing) toast('Completed'); },'center');
     const sh=$('#sheetInner');
     sh.querySelectorAll('.status button').forEach(b=>b.onclick=()=>{status=b.dataset.s;sh.querySelectorAll('.status button').forEach(x=>x.classList.toggle('on',x===b))});
-    if(!editing){
-      const list=$('#fuList');
-      const addInput=focus=>{
-        const r=document.createElement('div');r.className='fu';
-        r.innerHTML=`<span class="ring"></span><input placeholder="Follow-up reminder"><button class="rm" aria-label="Remove">−</button>`;
-        r.querySelector('.rm').onclick=()=>r.remove();
-        r.querySelector('input').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addInput(true)}};
-        list.insertBefore(r,list.querySelector('.addrow'));
-        if(focus) r.querySelector('input').focus();
-      };
-      const add=document.createElement('button');add.className='addrow';add.innerHTML='<i>+</i>Add Follow-up';
-      add.onclick=()=>addInput(true);list.appendChild(add);
-    }
+    if(!editing) addFollowUpUI($('#fuList'));
     sh.querySelector('[data-a=save]').onclick=()=>{
       t.log={status,text:$('#logText').value.trim()};
       let n=0;
-      if(!editing) sh.querySelectorAll('.fu input').forEach(inp=>{const v=inp.value.trim();if(v){state.todos.push({id:uid(),title:v,parentId:t.id,createdAt:Date.now()+n,done:false});n++}});
+      if(!editing) n=collectFollowUps(sh,t);
       save();closeSheet(false);render();
       toast(editing?'Log updated':n?`Saved · ${plural(n,'follow-up')} added`:'Log saved');
     };
+  }
+
+  /* count-mode check-in: tapping the circle records one check-in, the popup only adds detail */
+  function openCheckIn(t){
+    const chk={at:Date.now(),status:'ok',text:''};
+    t.count.checks=t.count.checks||[];t.count.checks.push(chk);
+    const s=countStatus(t);
+    const final=!!(s.P&&s.achieved>=s.P);
+    if(final){t.done=true;t.doneAt=chk.at;t.log={status:'ok',text:''}}
+    save();render();
+    let status='ok';
+    const title=final?'All Periods Done 🎉':`Check-in ${s.count}/${s.M}`;
+    openSheet(`
+      <div class="sh-nav"><span class="l"></span><span class="c">${title}</span><button class="r" data-a="save">Save</button></div>
+      <div class="sh-body">
+        <div class="group">
+          <div class="status">${Object.entries(STATUS).map(([k,v])=>`<button data-s="${k}" class="${k===status?'on':''}"><span class="e">${v.e}</span>${v.label}</button>`).join('')}</div>
+          <textarea class="gi" id="logText" placeholder="Notes for this check-in…"></textarea>
+        </div>
+        ${final?`<div class="group" id="fuList" style="margin-bottom:0"></div>`:''}
+      </div>`,cancelled=>{if(cancelled) toast(final?'Completed':s.count>=s.M?`Period complete · ${s.count}/${s.M}`:`Checked in · ${s.count}/${s.M}`)},'center');
+    const sh=$('#sheetInner');
+    sh.querySelectorAll('.status button').forEach(b=>b.onclick=()=>{status=b.dataset.s;sh.querySelectorAll('.status button').forEach(x=>x.classList.toggle('on',x===b))});
+    if(final) addFollowUpUI($('#fuList'));
+    sh.querySelector('[data-a=save]').onclick=()=>{
+      chk.status=status;chk.text=$('#logText').value.trim();
+      let n=0;
+      if(final){t.log={status,text:chk.text};n=collectFollowUps(sh,t)}
+      save();closeSheet(false);render();
+      toast(n?`Saved · ${plural(n,'follow-up')} added`:'Check-in saved');
+    };
+  }
+  function addFollowUpUI(list){
+    const addInput=focus=>{
+      const r=document.createElement('div');r.className='fu';
+      r.innerHTML=`<span class="ring"></span><input placeholder="Follow-up reminder"><button class="rm" aria-label="Remove">−</button>`;
+      r.querySelector('.rm').onclick=()=>r.remove();
+      r.querySelector('input').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addInput(true)}};
+      list.insertBefore(r,list.querySelector('.addrow'));
+      if(focus) r.querySelector('input').focus();
+    };
+    const add=document.createElement('button');add.className='addrow';add.innerHTML='<i>+</i>Add Follow-up';
+    add.onclick=()=>addInput(true);list.appendChild(add);
+  }
+  function collectFollowUps(sh,t){
+    let n=0;
+    sh.querySelectorAll('.fu input').forEach(inp=>{const v=inp.value.trim();if(v){state.todos.push({id:uid(),title:v,parentId:t.id,createdAt:Date.now()+n,done:false});n++}});
+    return n;
+  }
+
+  /* focus mode: note in a large centered editor */
+  function openFocus(t){
+    openSheet(`
+      <div class="sh-nav"><span class="l"></span><span class="c fc-title">${esc(t.title)}</span><button class="r" data-a="close">Done</button></div>
+      <div class="sh-body fc-body"><textarea id="focusText" class="fc-text" placeholder="Write freely…">${esc(t.note||'')}</textarea></div>`,
+      ()=>{const v=$('#focusText')?.value;if(v!=null&&v.trim()!==(t.note||'')){t.note=v.trim();save()}render()},'focus');
+    $('#sheetInner [data-a=close]').onclick=()=>closeSheet(false);
   }
 
   /* completed list (90% sheet) */
@@ -470,16 +645,52 @@
   }
 
   /* details */
-  function openDetail(t){
+  const sw=(on,a)=>`<button class="sw ${on?'on':''}" data-a="${a}" role="switch" aria-checked="${on}"><i></i></button>`;
+  function countSection(t){
+    const c=t.count;
+    const head=`<div class="glabel">Modes</div>
+      <div class="group">
+        <div class="gi kv"><span class="k">Focus Mode<small>Notes open in a large view</small></span>${sw(!!t.focus,'focus')}</div>
+        <div class="gi kv"><span class="k">Count Mode<small>Check in M times every N days</small></span>${sw(!!c?.enabled,'count')}</div>
+      </div>`;
+    if(!c?.enabled) return head;
+    const s=countStatus(t);
+    const checks=(c.checks||[]).slice().sort((a,b)=>b.at-a.at);
+    return head+`
+      <div class="glabel">Count Rule</div>
+      <div class="group">
+        <div class="gi kv"><span class="k">Every</span><span class="numwrap"><input class="num" type="number" inputmode="numeric" min="1" data-f="days" value="${c.days}"> days</span></div>
+        <div class="gi kv"><span class="k">Times per period</span><span class="numwrap"><input class="num" type="number" inputmode="numeric" min="1" data-f="times" value="${c.times}"> times</span></div>
+        <div class="gi kv"><span class="k">Total periods</span><span class="numwrap"><input class="num" type="number" inputmode="numeric" min="1" data-f="periods" value="${c.periods||''}" placeholder="∞"></span></div>
+        <div class="gi kv"><span class="k">Start date</span><input class="date" type="date" data-f="start" value="${c.start}"></div>
+        <div class="gi kv"><span class="k">Skip weekends & holidays<small>China mainland calendar · make-up workdays count</small></span>${sw(!!c.skipHolidays,'hol')}</div>
+      </div>
+      <div class="gfoot">Only active days count toward a period. Leave Total periods empty to repeat forever; with a number, the reminder completes once that many periods are met.${s.noHolidayData?' Holiday data covers 2026–2027; other years skip weekends only.':''}</div>
+      <div class="glabel">Skip Dates</div>
+      <div class="group">
+        ${(c.skips||[]).map((r,i)=>`<div class="gi skiprow" data-i="${i}"><input class="date" type="date" data-k="from" value="${r.from||''}"><span class="dash">–</span><input class="date" type="date" data-k="to" value="${r.to||''}"><button class="rm" data-a="rmskip" aria-label="Remove">−</button></div>`).join('')}
+        <button class="addrow" data-a="addskip" style="border-top:${(c.skips||[]).length?'.5px solid var(--sep)':'0'}"><i>+</i>Add Skip Range</button>
+      </div>
+      <div class="glabel">Progress</div>
+      <div class="group">
+        <div class="gi kv"><span class="k">${s.notStarted?'Starts':'This period'}</span><span class="v">${s.notStarted?fmtKey(c.start):rangeText(s.range)+' · '+s.count+'/'+s.M}</span></div>
+        <div class="gi kv"><span class="k">Periods met</span><span class="v">${s.achieved}${s.P?' / '+s.P:''}${s.missed?' · '+s.missed+' missed':''}</span></div>
+        ${s.todaySkip&&!s.notStarted?`<div class="gi kv"><span class="k">Today</span><span class="v">${s.todaySkip==='custom'?'Skip range':s.todaySkip==='holiday'?'Public holiday':'Weekend'} · not counted</span></div>`:''}
+        ${t.done?'':`<button class="btn-row" data-a="checkin" style="border-top:.5px solid var(--sep)">⟳ Check In Now</button>`}
+      </div>
+      ${checks.length?`<div class="glabel">Check-ins · ${checks.length}</div>
+      <div class="group">${checks.map(k=>{const st=STATUS[k.status]||STATUS.ok;return `<div class="gi chkrow" data-at="${k.at}"><span class="dot" style="background:${st.color}"></span><span class="ct"><b>${fmt(k.at)}</b>${k.text?esc(k.text):''}</span><button class="rm" data-a="rmcheck" aria-label="Remove">−</button></div>`}).join('')}</div>`:''}`;
+  }
+  function detailHTML(t){
     const p=t.parentId?byId(t.parentId):null,ks=kids(t.id),chain=chainOf(t);
     const st=t.log&&STATUS[t.log.status];
     const navRow=x=>`<button class="gi nav-row" data-go="${x.id}"><span class="ring ${x.done?'f':''}"></span><span class="tx">${esc(x.title)}</span><span class="tag">${x.done?'Done':''}</span><span class="chev">›</span></button>`;
-    openSheet(`
+    return `
       <div class="sh-nav"><span class="l"></span><span class="c">Details</span><button class="r" data-a="close">Done</button></div>
       <div class="sh-body">
         <div class="group">
           <div class="gi" style="font-weight:600">${esc(t.title)}</div>
-          ${t.note?`<div class="gi" style="color:var(--sub);font-size:15px;white-space:pre-wrap">${esc(t.note)}</div>`:''}
+          ${t.note?`<div class="gi dnote ${t.focus?'focus':''}" ${t.focus?'data-a="focusopen"':''}>${t.focus?`<span class="fi">${FOCUS_ICON}</span>`:''}${esc(t.note)}</div>`:''}
         </div>
         <div class="group">
           <div class="gi kv"><span class="k">Created</span><span class="v">${fmt(t.createdAt)}</span></div>
@@ -493,8 +704,9 @@
             <div class="txt ${t.log?.text?'':'none'}">${t.log?.text?esc(t.log.text):'No notes'}</div>
           </div>
           <button class="btn-row" data-a="editlog" style="border-top:.5px solid var(--sep)">Edit Log</button>
-        </div>`:`
-        <div class="group"><button class="btn-row" data-a="complete">✓ Mark as Completed</button></div>`}
+        </div>`:(t.count?.enabled?'':`
+        <div class="group"><button class="btn-row" data-a="complete">✓ Mark as Completed</button></div>`)}
+        ${countSection(t)}
         ${chain.length>1||ks.length?`
         <div class="glabel">Chain</div>
         <div class="group"><div class="chain">
@@ -509,14 +721,64 @@
         </div>
         <div class="group"><button class="btn-row" data-a="graph">View in Graph</button></div>
         <div class="group"><button class="btn-row red" data-a="del">Delete</button></div>
-      </div>`,()=>render());
-    const sh=$('#sheetInner');
-    sh.querySelector('[data-a=close]').onclick=()=>closeSheet(false);
+      </div>`;
+  }
+  function openDetail(t){
+    openSheet(detailHTML(t),()=>render());
+    bindDetail(t);
+  }
+  function refreshDetail(t){
+    const body=$('#sheetInner .sh-body'),y=body?body.scrollTop:0;
+    $('#sheetInner').innerHTML=detailHTML(t);bindDetail(t);
+    const nb=$('#sheetInner .sh-body');if(nb) nb.scrollTop=y;
+    save();
+  }
+  function recheckDone(t){
+    // keep "done" consistent with the count rule after edits
+    if(!t.count?.enabled) return;
+    const s=countStatus(t);
+    const met=!!(s.P&&s.achieved>=s.P);
+    if(t.done&&!met){t.done=false;delete t.doneAt}
+    else if(!t.done&&met){t.done=true;t.doneAt=Date.now();if(!t.log)t.log={status:'ok',text:''}}
+  }
+  function bindDetail(t){
+    const sh=$('#sheetInner'),ks=kids(t.id);
+    const on=(sel,fn)=>{const el=sh.querySelector(sel);if(el) el.onclick=fn};
+    on('[data-a=close]',()=>closeSheet(false));
     sh.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=>{const x=byId(el.dataset.go);if(x&&x.id!==t.id){closeSheet(false);setTimeout(()=>openDetail(x),260)}});
-    sh.querySelector('[data-a=newchild]').onclick=()=>{closeSheet(false);setTimeout(()=>startNew(t.id),300)};
-    sh.querySelector('[data-a=graph]').onclick=()=>{closeSheet(false);state.view='graph';state.hl=t.id;render()};
-    const c=sh.querySelector('[data-a=complete]'); if(c) c.onclick=()=>{closeSheet(false);setTimeout(()=>{markPending(t.id);openComplete(t,false)},260)};
-    const e=sh.querySelector('[data-a=editlog]'); if(e) e.onclick=()=>{closeSheet(false);setTimeout(()=>openComplete(t,true),260)};
+    on('[data-a=newchild]',()=>{closeSheet(false);setTimeout(()=>startNew(t.id),300)});
+    on('[data-a=graph]',()=>{closeSheet(false);state.view='graph';state.hl=t.id;render()});
+    on('[data-a=complete]',()=>{closeSheet(false);setTimeout(()=>{markPending(t.id);openComplete(t,false)},260)});
+    on('[data-a=editlog]',()=>{closeSheet(false);setTimeout(()=>openComplete(t,true),260)});
+    on('[data-a=focusopen]',()=>{closeSheet(false);setTimeout(()=>openFocus(t),280)});
+    on('[data-a=checkin]',()=>{closeSheet(false);setTimeout(()=>openCheckIn(t),280)});
+    on('[data-a=focus]',()=>{t.focus=!t.focus;refreshDetail(t)});
+    on('[data-a=count]',()=>{
+      if(t.count){t.count.enabled=!t.count.enabled}else{t.count=newCount()}
+      if(t.count.enabled&&t.done&&!(t.count.periods)){t.done=false;delete t.doneAt}
+      recheckDone(t);refreshDetail(t);
+    });
+    on('[data-a=hol]',()=>{t.count.skipHolidays=!t.count.skipHolidays;recheckDone(t);refreshDetail(t)});
+    on('[data-a=addskip]',()=>{const k=dKey(addDays(new Date(),1));(t.count.skips=t.count.skips||[]).push({from:k,to:k});refreshDetail(t)});
+    sh.querySelectorAll('[data-a=rmskip]').forEach(b=>b.onclick=()=>{t.count.skips.splice(+b.closest('.skiprow').dataset.i,1);recheckDone(t);refreshDetail(t)});
+    sh.querySelectorAll('[data-a=rmcheck]').forEach(b=>b.onclick=()=>{
+      const row=b.closest('.chkrow');
+      if(!row.dataset.confirm){row.dataset.confirm=1;b.textContent='Delete';b.classList.add('confirm');return}
+      const at=+row.dataset.at;t.count.checks=t.count.checks.filter(x=>x.at!==at);recheckDone(t);refreshDetail(t);toast('Check-in removed');
+    });
+    sh.querySelectorAll('.skiprow input').forEach(inp=>inp.onchange=()=>{
+      const r=t.count.skips[+inp.closest('.skiprow').dataset.i];r[inp.dataset.k]=inp.value;
+      if(r.from&&r.to&&r.to<r.from){const x=r.from;r.from=r.to;r.to=x}
+      if(r.from&&!r.to) r.to=r.from;
+      recheckDone(t);refreshDetail(t);
+    });
+    sh.querySelectorAll('input[data-f]').forEach(inp=>inp.onchange=()=>{
+      const f=inp.dataset.f,c=t.count;
+      if(f==='start'){if(inp.value) c.start=inp.value}
+      else if(f==='periods'){const v=parseInt(inp.value,10);c.periods=v>0?v:null}
+      else{const v=parseInt(inp.value,10);c[f]=v>0?Math.min(v,f==='days'?365:99):c[f]}
+      recheckDone(t);refreshDetail(t);
+    });
     const d=sh.querySelector('[data-a=del]');
     d.onclick=()=>{
       if(d.dataset.confirm){
@@ -530,11 +792,11 @@
   function markPending(id){const r=document.querySelector(`#main .row[data-id="${id}"]`);if(r) r.classList.add('pending')}
 
   /* ---------- Excel ---------- */
-  const COLS=['ID','Title','Notes','Status','Created','Completed','Result','Completion Note','Follow-up Of (ID)'];
+  const COLS=['ID','Title','Notes','Status','Created','Completed','Result','Completion Note','Follow-up Of (ID)','Extra (JSON)'];
   const RESULT_LABEL={ok:'Done',part:'Partly done',issue:'Blocked'};
   function makeSheet(rows){
     const ws=XLSX.utils.aoa_to_sheet([COLS,...rows]);
-    ws['!cols']=[{wch:10},{wch:34},{wch:30},{wch:8},{wch:17},{wch:17},{wch:12},{wch:46},{wch:16}];
+    ws['!cols']=[{wch:10},{wch:34},{wch:30},{wch:8},{wch:17},{wch:17},{wch:12},{wch:46},{wch:16},{wch:40}];
     ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:COLS.length-1}})};
     return ws;
   }
@@ -548,7 +810,8 @@
       ['Completed','Date/time it was completed (only for Done rows).'],
       ['Result','Done, Partly done, or Blocked (only for Done rows).'],
       ['Completion Note','What happened when it was completed.'],
-      ['Follow-up Of (ID)','The ID of the reminder this one follows. This builds the links shown in the graph.']];
+      ['Follow-up Of (ID)','The ID of the reminder this one follows. This builds the links shown in the graph.'],
+      ['Extra (JSON)','App settings for Focus Mode and Count Mode (rule, skip dates, check-ins). Written by Export — leave as is, or blank for plain reminders.']];
     const ws=XLSX.utils.aoa_to_sheet(g);ws['!cols']=[{wch:20},{wch:90}];return ws;
   }
   async function saveWorkbook(wb,filename){
@@ -572,7 +835,8 @@
     if(typeof XLSX==='undefined'){toast('Excel library failed to load');return}
     const list=state.todos.slice().sort((a,b)=>a.createdAt-b.createdAt);
     const rows=list.map(t=>[t.id,t.title,t.note||'',t.done?'Done':'Open',isoLocal(t.createdAt),t.done?isoLocal(t.doneAt):'',
-      t.done?RESULT_LABEL[t.log?.status]||'Done':'',t.done?(t.log?.text||''):'',t.parentId&&byId(t.parentId)?t.parentId:'']);
+      t.done?RESULT_LABEL[t.log?.status]||'Done':'',t.done?(t.log?.text||''):'',t.parentId&&byId(t.parentId)?t.parentId:'',
+      (t.focus||t.count)?JSON.stringify({focus:!!t.focus,count:t.count||undefined}):'']);
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,makeSheet(rows),'Reminders');
     XLSX.utils.book_append_sheet(wb,guideSheet(),'Guide');
@@ -621,6 +885,8 @@
       t.title=title;t.note=String(pick(r,'notes','note')).trim();
       if(done){t.done=true;t.doneAt=parseTime(pick(r,'completed'))||t.doneAt||now;t.log={status,text:String(pick(r,'completionnote')).trim()}}
       else{t.done=false;delete t.doneAt}
+      const ex=String(pick(r,'extra')).trim();
+      if(ex){try{const o=JSON.parse(ex);if(typeof o.focus==='boolean')t.focus=o.focus;if(o.count&&typeof o.count==='object'){t.count=Object.assign(newCount(),o.count);if(!Array.isArray(t.count.checks))t.count.checks=[];if(!Array.isArray(t.count.skips))t.count.skips=[]}}catch(e){}}
       links.push([t,String(pick(r,'followupof','parent')).trim()]);
     });
     links.forEach(([t,pid])=>{
@@ -658,7 +924,6 @@
   menu.onclick=e=>{const b=e.target.closest('button');if(!b)return;closeMenu();const m=b.dataset.m;
     if(m==='completed') openCompleted();
     if(m==='view'){state.view=state.view==='graph'?'list':'graph';state.hl=null;render()}
-    if(m==='reset'){state.todos=seed();state.hl=null;save();render();toast('Sample data restored')}
     if(m==='export') exportExcel();
     if(m==='template') exportTemplate();
     if(m==='import') $('#fileIn').click();
@@ -670,18 +935,93 @@
     const go=e.target.closest('.chip[data-go]');
     if(go){e.stopPropagation();state.view='graph';state.hl=go.dataset.go;render();return}
     const g=e.target.closest('.gnode');
-    if(g){const t=byId(g.dataset.id);state.hl=t.id;renderGraph();openDetail(t);return}
+    if(g){if(Date.now()<suppressClickUntil) return;const t=byId(g.dataset.id);if(!t) return;state.hl=t.id;renderGraph();openDetail(t);return}
     const row=e.target.closest('.row');if(!row) return;
     const t=byId(row.dataset.id);if(!t) return;
+    if(t.focus&&e.target.closest('.sub.focus')){if(state.editing) commitEdit(false);openFocus(t);return}
     if(e.target.closest('.body.editing')) return;
     if(e.target.closest('.info')){openDetail(t);return}
     if(e.target.closest('.check')){
       if(t.done){t.done=false;delete t.doneAt;save();render();}
+      else if(t.count?.enabled){row.querySelector('.check').classList.add('bump');setTimeout(()=>openCheckIn(t),160);}
       else{markPending(t.id);setTimeout(()=>openComplete(t,false),220);}
       return;
     }
     if(e.target.closest('.body')) startEdit(t.id,!!e.target.closest('.sub'));
   });
+
+  /* ---------- graph: drag a node onto another to relink ---------- */
+  let drag=null,pressTimer=null,press=null,suppressClickUntil=0;
+  function descendants(id,set=new Set()){kids(id).forEach(k=>{if(!set.has(k.id)){set.add(k.id);descendants(k.id,set)}});return set}
+  function svgPt(cx,cy){const r=$('#gsvg').getBoundingClientRect();return {x:cx-r.left,y:cy-r.top}}
+  function startDrag(id,cx,cy){
+    const g=document.querySelector(`.gnode[data-id="${id}"]`),p=graphPos[id];if(!g||!p) return;
+    const pt=svgPt(cx,cy);
+    const forbid=descendants(id);forbid.add(id);
+    drag={id,g,forbid,ox:pt.x-p.x,oy:pt.y-p.y,target:null,unlink:false};
+    g.parentNode.appendChild(g);g.classList.add('dragging');
+    document.querySelectorAll('.gnode').forEach(n=>{if(forbid.has(n.dataset.id)&&n!==g) n.classList.add('nodrop')});
+    const t=byId(id),z=$('#unlinkZone');
+    if(t&&t.parentId){z.classList.add('show')}
+    try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
+  }
+  function moveDrag(cx,cy){
+    const pt=svgPt(cx,cy);
+    drag.g.setAttribute('transform',`translate(${pt.x-drag.ox},${pt.y-drag.oy})`);
+    let target=null;
+    for(const [id,p] of Object.entries(graphPos)){
+      if(drag.forbid.has(id)) continue;
+      if(pt.x>=p.x&&pt.x<=p.x+GW&&pt.y>=p.y&&pt.y<=p.y+GH){target=id;break}
+    }
+    if(target!==drag.target){
+      document.querySelectorAll('.gnode.drop').forEach(n=>n.classList.remove('drop'));
+      if(target) document.querySelector(`.gnode[data-id="${target}"]`)?.classList.add('drop');
+      drag.target=target;
+    }
+    const z=$('#unlinkZone'),zr=z.getBoundingClientRect();
+    drag.unlink=z.classList.contains('show')&&cy>=zr.top&&cy<=zr.bottom&&cx>=zr.left&&cx<=zr.right;
+    z.classList.toggle('hot',drag.unlink);
+    // edge auto-scroll
+    const w=$('#gwrap'),wr=w.getBoundingClientRect(),sc=$('#scroll'),sr=sc.getBoundingClientRect();
+    if(cx>wr.right-36) w.scrollLeft+=10; else if(cx<wr.left+36) w.scrollLeft-=10;
+    if(cy>sr.bottom-110) sc.scrollTop+=10; else if(cy<sr.top+120) sc.scrollTop-=10;
+  }
+  function endDrag(){
+    const d=drag;drag=null;suppressClickUntil=Date.now()+400;
+    const z=$('#unlinkZone');z.classList.remove('show','hot');
+    if(!d) return;
+    const t=byId(d.id);
+    if(t&&d.target&&t.parentId!==d.target){t.parentId=d.target;save();state.hl=t.id;toast(`Now follows “${byId(d.target).title.slice(0,24)}”`)}
+    else if(t&&d.unlink&&t.parentId){delete t.parentId;save();state.hl=t.id;toast('Unlinked')}
+    renderGraph();
+  }
+  const mainEl=$('#main');
+  mainEl.addEventListener('mousedown',e=>{
+    const g=e.target.closest('.gnode');if(!g||e.button!==0) return;
+    press={id:g.dataset.id,x:e.clientX,y:e.clientY};e.preventDefault();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(press&&!drag&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>5) startDrag(press.id,press.x,press.y);
+    if(drag) moveDrag(e.clientX,e.clientY);
+  });
+  window.addEventListener('mouseup',()=>{press=null;if(drag) endDrag()});
+  mainEl.addEventListener('touchstart',e=>{
+    const g=e.target.closest('.gnode');if(!g||e.touches.length>1) return;
+    const tc=e.touches[0];press={id:g.dataset.id,x:tc.clientX,y:tc.clientY};
+    clearTimeout(pressTimer);
+    pressTimer=setTimeout(()=>{if(press){startDrag(press.id,press.x,press.y);g.classList.add('lifted')}},320);
+  },{passive:true});
+  mainEl.addEventListener('touchmove',e=>{
+    const tc=e.touches[0];
+    if(drag){e.preventDefault();moveDrag(tc.clientX,tc.clientY);return}
+    if(press&&Math.hypot(tc.clientX-press.x,tc.clientY-press.y)>8){clearTimeout(pressTimer);press=null}
+  },{passive:false});
+  mainEl.addEventListener('touchend',e=>{
+    clearTimeout(pressTimer);press=null;
+    if(drag){e.preventDefault();endDrag()}
+  });
+  mainEl.addEventListener('touchcancel',()=>{clearTimeout(pressTimer);press=null;if(drag){drag.target=null;drag.unlink=false;endDrag()}});
+  mainEl.addEventListener('contextmenu',e=>{if(e.target.closest('.gnode')) e.preventDefault()});
   $('#backBtn').onclick=()=>{if(state.view==='graph'){state.view='list';state.hl=null;render()}};
   $('#scroll').addEventListener('scroll',()=>$('.nav').classList.toggle('scrolled',$('#scroll').scrollTop>40));
   $('#addBtn').onclick=()=>startNew(null);
